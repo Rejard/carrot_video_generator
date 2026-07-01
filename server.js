@@ -235,7 +235,7 @@ app.post('/api/render-video', async (req, res) => {
               '-c:v copy',
               '-c:a aac',
               '-b:a 192k',
-              '-shortest' // 더 짧은 스트림 길이에 맞춤 (비디오와 오디오 싱크 일치)
+              '-shortest'
             ])
             .save(piecePath)
             .on('end', resolve)
