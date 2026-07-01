@@ -4,7 +4,7 @@ const fs = require('fs');
 
 const dbPath = path.join(__dirname, 'video_generator.db');
 
-// DB 인스턴스 싱글톤
+
 let db = null;
 
 function getDB() {
@@ -14,7 +14,7 @@ function getDB() {
   return db;
 }
 
-// 프로미스 래퍼 함수들
+
 function run(sql, params = []) {
   return new Promise((resolve, reject) => {
     getDB().run(sql, params, function (err) {
@@ -42,7 +42,7 @@ function get(sql, params = []) {
   });
 }
 
-// 데이터베이스 테이블 초기화
+
 async function initDB() {
   const createVideosTable = `
     CREATE TABLE IF NOT EXISTS videos (

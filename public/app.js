@@ -24,7 +24,7 @@ const finalVideo = document.getElementById('final-video');
 const downloadVideo = document.getElementById('download-video');
 const downloadSrt = document.getElementById('download-srt');
 
-// 1. AI 모델 목록 가져오기 및 바인딩
+
 async function loadModels() {
   try {
     const res = await fetch('/api/models');
@@ -32,7 +32,7 @@ async function loadModels() {
     if (data.success && data.models) {
       modelSelect.innerHTML = '';
       
-      // Gemini 모델 추가
+
       if (data.models.gemini) {
         data.models.gemini.forEach(m => {
           const opt = document.createElement('option');
@@ -42,7 +42,7 @@ async function loadModels() {
           modelSelect.appendChild(opt);
         });
       }
-      // OpenAI 모델 추가
+
       if (data.models.openai) {
         data.models.openai.forEach(m => {
           const opt = document.createElement('option');
@@ -57,10 +57,10 @@ async function loadModels() {
   }
 }
 
-// 초기화
+
 loadModels();
 
-// 2. 비디오 자동 제작 시작 버튼 이벤트
+
 btnStart.addEventListener('click', async () => {
   const prompt = promptInput.value.trim();
   const sceneCount = parseInt(sceneCountSelect.value);
@@ -71,7 +71,7 @@ btnStart.addEventListener('click', async () => {
     return;
   }
 
-  // UI 초기화
+
   btnStart.disabled = true;
   btnStart.innerHTML = `<span>⏳ 시나리오 기획 중...</span>`;
   btnResume.style.display = 'none';
@@ -85,7 +85,7 @@ btnStart.addEventListener('click', async () => {
   highlightStep(step1);
 
   try {
-    // 1단계: 시나리오 아웃라인 기획
+
     const planRes = await fetch('/api/plan-scenes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -100,17 +100,17 @@ btnStart.addEventListener('click', async () => {
     currentVideoId = planData.videoId;
     completeStep(step1);
     
-    // 빈 상태 메시지 제거
+
     const emptyState = document.getElementById('empty-state');
     if (emptyState) emptyState.remove();
 
-    // 씬 카드 목록 선 그리기
+
     planData.scenes.forEach(s => {
       const card = createSceneCard(s.sceneNum, s.visualDescription, s.ttsText);
       scenesContainer.appendChild(card);
     });
 
-    // 2/3단계: 실시간 순차 루프 스트리밍 개시
+
     startStreaming(currentVideoId, sceneCount);
 
   } catch (err) {
@@ -120,7 +120,7 @@ btnStart.addEventListener('click', async () => {
   }
 });
 
-// 3. SSE 스트리밍 개시
+
 function startStreaming(videoId, totalScenes) {
   highlightStep(step2);
   highlightStep(step3);
@@ -153,14 +153,14 @@ function startStreaming(videoId, totalScenes) {
       const data = JSON.parse(event.data);
       
       if (data.type === 'status') {
-        // 씬 생성 중 상태 변경
+
         updateSceneCardStatus(data.sceneNum, 'generating', '생성 진행 중...');
       } else if (data.type === 'progress') {
         const scene = data.scene;
-        // 씬 생성 완료 및 이미지/지문/대사 바인딩
+
         updateSceneCardDone(scene.sceneNum, scene.imageUrl, scene.visualDescription, scene.ttsText);
         
-        // 진행률 갱신
+
         const completedCount = document.querySelectorAll('.scene-card.completed-card').length;
         const pct = Math.round((completedCount / totalScenes) * 100);
         progressBar.style.width = `${pct}%`;
@@ -180,7 +180,7 @@ function startStreaming(videoId, totalScenes) {
   };
 }
 
-// 스트리밍 실패 시 복구(Resume) 제어
+
 function handleStreamError() {
   if (eventSource) {
     eventSource.close();
@@ -190,13 +190,13 @@ function handleStreamError() {
   btnStart.innerHTML = `<span>🚀 새 스토리로 다시 제작</span>`;
   btnResume.style.display = 'block'; // 이어하기 버튼 노출
   
-  // 파이프라인 시각 상태 멈춤
+
   resetSteps();
   step2.classList.add('active'); // 루프 에러 표시 느낌
   alert('⚠️ 일부 이미지 혹은 오디오 생성 중 통신 지연이 발생하여 일시 중단되었습니다. [이어하기] 버튼을 누르면 비용 소모 없이 실패한 지점부터 재개됩니다!');
 }
 
-// 4. 이어하기(Resume) 버튼 이벤트
+
 btnResume.addEventListener('click', () => {
   if (!currentVideoId) return;
   
@@ -208,7 +208,7 @@ btnResume.addEventListener('click', () => {
   startStreaming(currentVideoId, totalScenes);
 });
 
-// 5. 5단계: FFmpeg 최종 영상 컴파일 렌더링 요청
+
 btnRender.addEventListener('click', async () => {
   if (!currentVideoId) return;
 
@@ -233,7 +233,7 @@ btnRender.addEventListener('click', async () => {
     btnRender.innerHTML = `<span>🎞️ FFmpeg 영상 컴파일 & 자막 인코딩</span>`;
     btnRender.disabled = false;
 
-    // 최종 결과물 노출
+
     finalVideo.src = data.videoUrl;
     downloadVideo.href = data.videoUrl;
     downloadSrt.href = data.srtUrl;
@@ -248,7 +248,7 @@ btnRender.addEventListener('click', async () => {
   }
 });
 
-// UI 유틸리티 함수들
+
 function resetSteps() {
   [step1, step2, step3].forEach(step => {
     step.className = 'step-item';
@@ -322,7 +322,7 @@ function updateSceneCardDone(sceneNum, imageUrl, visualDescription, ttsText) {
 
   imgHolder.className = 'scene-image-placeholder';
   imgHolder.style.backgroundImage = `url('${imageUrl}')`;
-  imgHolder.innerHTML = ''; // 안내 텍스트 삭제
+
 
   if (visualHolder) visualHolder.innerText = visualDescription;
   if (ttsHolder) ttsHolder.innerText = `"${ttsText}"`;

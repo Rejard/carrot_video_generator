@@ -2,10 +2,10 @@ const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
 
-// .env 로드 (API 키 참조용)
+
 require('dotenv').config({ override: true });
 
-// 시스템 환경 변수 GEMINI_API_KEY 로드
+
 const apiKey = process.env.GEMINI_API_KEY;
 let ai = null;
 
@@ -15,7 +15,7 @@ if (apiKey) {
   console.warn('⚠️ WARNING: GEMINI_API_KEY is not defined. The app will run in fallback mock mode.');
 }
 
-// 1. 1단계: 씬 아웃라인 기획
+
 async function planScenes(prompt, sceneCount, modelId = 'gemini-3.1-flash-lite-preview') {
   if (!ai) {
     return generateMockScenes(prompt, sceneCount);
@@ -68,7 +68,7 @@ async function planScenes(prompt, sceneCount, modelId = 'gemini-3.1-flash-lite-p
   }
 }
 
-// 2/3단계: 씬별 이미지 생성 (캐릭터 및 화풍 일관성 적용)
+
 async function generateImageForScene(sceneNum, sceneDescription, baseCharacterDetails, videoId) {
   const outputDir = path.join(__dirname, 'public', 'outputs', videoId);
   if (!fs.existsSync(outputDir)) {
@@ -82,7 +82,7 @@ async function generateImageForScene(sceneNum, sceneDescription, baseCharacterDe
     return relativePath;
   }
 
-  // 1번 씬의 캐릭터 묘사를 공유하여 얼굴 일관성 유지하고 시네마틱 3D 애니메이션 아트 스타일 적용
+
   const artStyle = "Cinematic 3D animation, Unreal Engine 5 render, highly detailed, octane render, 8k resolution, volumetric lighting, colorful lighting, 16:9 aspect ratio";
   const prompt = `Prompt: ${sceneDescription}. Character Reference Details: ${baseCharacterDetails}. Theme Style: ${artStyle}`;
 
@@ -118,7 +118,7 @@ async function generateImageForScene(sceneNum, sceneDescription, baseCharacterDe
   }
 }
 
-// Pollinations AI를 통한 무료 이미지 생성 폴백
+
 async function saveFallbackAIImage(filePath, prompt) {
   try {
     const artStyle = "Cinematic 3D animation, Unreal Engine 5 render, highly detailed, octane render, 8k resolution, volumetric lighting, colorful lighting, 16:9 aspect ratio";
@@ -142,7 +142,7 @@ async function saveFallbackAIImage(filePath, prompt) {
   }
   return false;
 }
-// 2.5단계: Google Veo / Imagen Video API를 사용한 Image-to-Video 생성
+
 async function generateVideoForScene(sceneNum, imageRelativePath, sceneDescription, videoId) {
   const outputDir = path.join(__dirname, 'public', 'outputs', videoId);
   const inputImagePath = path.join(__dirname, 'public', imageRelativePath);
@@ -151,7 +151,7 @@ async function generateVideoForScene(sceneNum, imageRelativePath, sceneDescripti
 
   if (!ai) {
     console.log(`[Scene ${sceneNum}] Fallback: No AI key. Using static image.`);
-    return null; // 백엔드에서 null을 감지하면 FFmpeg zoompan으로 대체
+    return null;
   }
 
   try {
@@ -159,9 +159,7 @@ async function generateVideoForScene(sceneNum, imageRelativePath, sceneDescripti
     const imgBuffer = fs.readFileSync(inputImagePath);
     const imgBase64 = imgBuffer.toString('base64');
 
-    // 최신 Google GenAI Veo API 호출 형식
-    // 일부 계정은 veo-2.0-generate-001 모델 접근이 가능하며, 
-    // 실패 시 404/403 에러 핸들러가 FFmpeg 무빙으로 즉시 롤백을 제어합니다.
+
     const response = await ai.models.generateVideos({
       model: 'veo-2.0-generate-001',
       prompt: `A beautiful cinematic panning motion video of: ${sceneDescription}. Keep characters consistent. Smooth motion.`,
@@ -186,11 +184,11 @@ async function generateVideoForScene(sceneNum, imageRelativePath, sceneDescripti
   } catch (error) {
     console.warn(`⚠️ [Scene ${sceneNum}] Veo Image-to-Video API is not accessible or failed:`, error.message);
     console.log(`💡 [Scene ${sceneNum}] Switching to FFmpeg Ken Burns zoompan simulation.`);
-    return null; // 에러 시 null을 리턴하여 백엔드가 FFmpeg 줌인으로 연출하게 유도
+
   }
 }
 
-// 가상 씬 기획 생성기 (Fallback)
+
 function generateMockScenes(prompt, sceneCount) {
   const scenes = [];
   const sceneDrafts = [
@@ -208,26 +206,26 @@ function generateMockScenes(prompt, sceneCount) {
     const draftIndex = (i - 1) % sceneDrafts.length;
     scenes.push({
       sceneNum: i,
-      description: `[장면 ${i}] ${sceneDrafts[draftIndex]}`,
+      description: `Scene ${i}: ${sceneDrafts[draftIndex]}`,
       characterDetails: mainCharacterDetails
     });
   }
   return scenes;
 }
 
-// 가상 그라데이션 SVG 이미지 파일 쓰기 (Fallback)
+
 async function saveMockImage(filePath, sceneNum) {
   const dummyIndex = ((sceneNum - 1) % 3) + 1; // 1, 2, 3 로테이션
   const dummySrc = path.join(__dirname, 'public', `dummy_${dummyIndex}.png`);
   if (fs.existsSync(dummySrc)) {
     fs.copyFileSync(dummySrc, filePath);
   } else {
-    // 만약 파일이 없으면, Base64로 된 간단한 1픽셀 JPEG를 생성합니다.
+
     const onePixelJpg = Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=', 'base64');
     fs.writeFileSync(filePath, onePixelJpg);
   }
   
-  // 0.5초 지연
+
   await new Promise(resolve => setTimeout(resolve, 500));
 }
 

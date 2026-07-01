@@ -12,16 +12,16 @@
 <body>
 
   <div class="container">
-    <!-- Header -->
+
     <header>
       <div class="badge">AI Video Agent Engine</div>
       <h1>영상 에이전트 자동화 시스템</h1>
       <p class="subtitle">Rejard님, 프롬프트 입력 한 번으로 시나리오 기획부터 이미지/오디오 생성 및 비디오 믹싱까지 백그라운드 루프로 자동 수행됩니다.</p>
     </header>
 
-    <!-- Simulation Section -->
+
     <div class="arena-grid">
-      <!-- Controller Card -->
+
       <div class="glass-card">
         <div class="card-title">
           <span class="icon">⚙️</span>
@@ -31,7 +31,7 @@
         <div class="control-group">
           <label for="model-select">AI 기획 모델</label>
           <select id="model-select" class="input-box">
-            <!-- API를 통해 동적으로 로드되나 기본값 명시 -->
+
             <option value="gemini-3.1-flash-lite-preview" selected>Gemini 3.1 Flash-Lite (나노 바나나)</option>
             <option value="gpt-5.4-nano">GPT-5.4 Nano (나노 바나나2)</option>
             <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
@@ -61,11 +61,11 @@
           </button>
         </div>
 
-        <!-- Pipeline Logs -->
+
         <div class="pipeline-status">
           <h3>엔진 작동 파이프라인</h3>
           <div style="margin-top: 16px;">
-            <!-- Step 1 -->
+
             <div id="step-1" class="step-item">
               <div class="step-circle">1</div>
               <div class="step-content">
@@ -73,7 +73,7 @@
                 <p>LLM에게 전체 씬 아웃라인(JSON 구조) 1회 요청하여 획득</p>
               </div>
             </div>
-            <!-- Step 2 -->
+
             <div id="step-2" class="step-item">
               <div class="step-circle">2</div>
               <div class="step-content">
@@ -81,7 +81,7 @@
                 <p>각 씬별 Rate Limit 우회를 위해 대기하며 이미지 & 오디오 생성</p>
               </div>
             </div>
-            <!-- Step 3 -->
+
             <div id="step-3" class="step-item">
               <div class="step-circle">3</div>
               <div class="step-content">
@@ -93,7 +93,7 @@
         </div>
       </div>
 
-      <!-- Dashboard Output Card -->
+
       <div class="glass-card dashboard-panel">
         <div class="dashboard-header">
           <div class="card-title" style="margin-bottom: 0;">
@@ -106,7 +106,7 @@
           <span id="progress-text" class="progress-text">0%</span>
         </div>
 
-        <!-- Render Target Area -->
+
         <div id="scenes-container" class="scenes-window">
           <div class="empty-state" id="empty-state">
             <span class="emoji">🎬</span>
@@ -116,7 +116,7 @@
       </div>
     </div>
 
-    <!-- Final Video Compilation Area -->
+
     <div id="render-panel" class="glass-card render-section" style="display: none;">
       <div class="card-title">
         <span class="icon">🎬</span>
@@ -134,7 +134,7 @@
         <span id="render-status" style="margin-left: 15px; font-weight: 600; color: #818CF8;"></span>
       </div>
 
-      <!-- Final Video Output -->
+
       <div id="video-output-area" style="display: none; margin-top: 30px;">
         <div class="video-container-box">
           <video id="final-video" controls width="100%"></video>

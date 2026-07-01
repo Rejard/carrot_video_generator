@@ -74,7 +74,7 @@ h1 {
   font-weight: 300;
 }
 
-/* Arena Grid Layout */
+
 .arena-grid {
   display: grid;
   grid-template-columns: 1fr 1.6fr;
