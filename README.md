@@ -9,8 +9,15 @@
 비디오 생성기를 실행하기 위해 컴퓨터에 다음 프로그램들이 설치되어 있어야 합니다.
 
 ### 1) Node.js 설치
-- **다운로드**: [Node.js 공식 홈페이지](https://nodejs.org/)에서 **LTS 버전**을 다운로드하여 설치하세요.
-- **확인**: 터미널(PowerShell)에서 `node -v`를 입력했을 때 버전 번호가 나오면 성공입니다.
+- **터미널 설치법 (권장)**: 터미널(PowerShell)에서 아래 명령어를 입력하여 설치하세요.
+  ```powershell
+  # winget 사용 시 (윈도우 기본)
+  winget install OpenJS.NodeJS.LTS
+
+  # 또는 Chocolatey 사용 시
+  choco install nodejs-lts
+  ```
+- **확인**: 터미널에서 `node -v`를 입력했을 때 버전 번호(예: v20.x.x)가 나오면 성공입니다.
 
 ### 2) FFmpeg 설치 (가장 중요!)
 이 프로젝트는 비디오 편집을 위해 FFmpeg가 반드시 필요합니다.
