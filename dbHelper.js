@@ -1,50 +1,28 @@
-const sqlite3 = require('sqlite3').verbose();
+const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
 
 const dbPath = path.join(__dirname, 'video_generator.db');
 
-
 let db = null;
 
-function getDB() {
-  if (!db) {
-    db = new sqlite3.Database(dbPath);
-  }
-  return db;
+function persist() {
+  if (!db) return;
+  const data = db.export();
+  fs.writeFileSync(dbPath, Buffer.from(data));
 }
-
-
-function run(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    getDB().run(sql, params, function (err) {
-      if (err) return reject(err);
-      resolve(this);
-    });
-  });
-}
-
-function all(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    getDB().all(sql, params, (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  });
-}
-
-function get(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    getDB().get(sql, params, (err, row) => {
-      if (err) return reject(err);
-      resolve(row);
-    });
-  });
-}
-
 
 async function initDB() {
-  const createVideosTable = `
+  const SQL = await initSqlJs();
+
+  if (fs.existsSync(dbPath)) {
+    const fileBuffer = fs.readFileSync(dbPath);
+    db = new SQL.Database(fileBuffer);
+  } else {
+    db = new SQL.Database();
+  }
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS videos (
       id TEXT PRIMARY KEY,
       prompt TEXT,
@@ -53,9 +31,9 @@ async function initDB() {
       createdAt TEXT,
       updatedAt TEXT
     )
-  `;
+  `);
 
-  const createScenesTable = `
+  db.run(`
     CREATE TABLE IF NOT EXISTS scenes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       videoId TEXT,
@@ -71,35 +49,43 @@ async function initDB() {
       updatedAt TEXT,
       UNIQUE(videoId, sceneNum)
     )
-  `;
+  `);
 
-  await run(createVideosTable);
-  await run(createScenesTable);
+  persist();
   console.log('✅ SQLite Database & Tables Initialized.');
 }
 
 async function createVideo(id, prompt, sceneCount) {
   const now = new Date().toISOString();
-  await run(
+  db.run(
     `INSERT OR REPLACE INTO videos (id, prompt, sceneCount, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
     [id, prompt, sceneCount, 'planning', now, now]
   );
+  persist();
   return { id, prompt, sceneCount, status: 'planning' };
 }
 
 async function getVideo(id) {
-  return await get(`SELECT * FROM videos WHERE id = ?`, [id]);
+  const stmt = db.prepare(`SELECT * FROM videos WHERE id = ?`);
+  stmt.bind([id]);
+  let row = null;
+  if (stmt.step()) {
+    row = stmt.getAsObject();
+  }
+  stmt.free();
+  return row;
 }
 
 async function updateVideoStatus(id, status) {
   const now = new Date().toISOString();
-  await run(`UPDATE videos SET status = ?, updatedAt = ? WHERE id = ?`, [status, now, id]);
+  db.run(`UPDATE videos SET status = ?, updatedAt = ? WHERE id = ?`, [status, now, id]);
+  persist();
 }
 
 async function savePlannedScenes(videoId, scenes) {
   const now = new Date().toISOString();
   for (const scene of scenes) {
-    await run(
+    db.run(
       `INSERT OR REPLACE INTO scenes (videoId, sceneNum, visualDescription, ttsText, characterDetails, imageUrl, audioUrl, duration, status, createdAt, updatedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -117,14 +103,29 @@ async function savePlannedScenes(videoId, scenes) {
       ]
     );
   }
+  persist();
 }
 
 async function getScenes(videoId) {
-  return await all(`SELECT * FROM scenes WHERE videoId = ? ORDER BY sceneNum ASC`, [videoId]);
+  const stmt = db.prepare(`SELECT * FROM scenes WHERE videoId = ? ORDER BY sceneNum ASC`);
+  stmt.bind([videoId]);
+  const rows = [];
+  while (stmt.step()) {
+    rows.push(stmt.getAsObject());
+  }
+  stmt.free();
+  return rows;
 }
 
 async function getScene(videoId, sceneNum) {
-  return await get(`SELECT * FROM scenes WHERE videoId = ? AND sceneNum = ?`, [videoId, sceneNum]);
+  const stmt = db.prepare(`SELECT * FROM scenes WHERE videoId = ? AND sceneNum = ?`);
+  stmt.bind([videoId, sceneNum]);
+  let row = null;
+  if (stmt.step()) {
+    row = stmt.getAsObject();
+  }
+  stmt.free();
+  return row;
 }
 
 async function updateScene(videoId, sceneNum, updates) {
@@ -136,10 +137,11 @@ async function updateScene(videoId, sceneNum, updates) {
   const params = keys.map(k => updates[k]);
   params.push(now, videoId, sceneNum);
 
-  await run(
+  db.run(
     `UPDATE scenes SET ${setClause}, updatedAt = ? WHERE videoId = ? AND sceneNum = ?`,
     params
   );
+  persist();
 }
 
 module.exports = {
