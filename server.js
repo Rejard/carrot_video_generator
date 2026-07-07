@@ -10,7 +10,7 @@ const ttsHelper = require('./ttsHelper');
 const ffmpegHelper = require('./ffmpegHelper');
 
 const app = express();
-const PORT = 3095;
+const PORT = process.env.PORT || 3095;
 
 app.use(cors());
 app.use(express.json());
